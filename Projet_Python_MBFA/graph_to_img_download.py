@@ -17,6 +17,7 @@ from joblib import Parallel, delayed
 
 mpl.rcParams['savefig.pad_inches'] = 0
 
+toml = get_toml_data('config.toml')
 image_path = toml['file']['image']
 
 WINDOW = 60
