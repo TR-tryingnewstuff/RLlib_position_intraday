@@ -23,17 +23,10 @@ DF_SPLIT = 10000
 
 toml = get_toml_data('config.toml')
 
-DF_SIZE = toml['config_data']['size'] # -20000
+DF_SIZE = toml['config_data']['size'] 
 WINDOW = toml['config_data']['window']
 
 image_path = toml['file']['image']
-
-#open_index = toml['index']['open']
-#close_index = toml['index']['close']
-#hour_index = toml['index']['hour']
-#fib_75_index = toml['index']['fib_75']
-#fib_25_index = toml['index']['fib_25']
-
 
 # --------------------------------------------
 
@@ -279,5 +272,4 @@ for i in range(20):
     episodes_len.append(train_res['episode_len_mean'])
 
 print(train_res, '\n'*3,episodes_len)
-
 
