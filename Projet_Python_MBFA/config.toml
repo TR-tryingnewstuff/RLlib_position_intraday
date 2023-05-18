@@ -1,0 +1,34 @@
+[config_data] 
+size = 0
+window = 60
+
+[file]
+image = '/Volumes/NO NAME/'
+data = '/Users/thomasrigou/Downloads/es-15m.csv'
+
+[index]
+open = 0                      
+high = 1                        
+low  = 2                        
+close = 3                       
+volume  = 4                     
+hour =5                         
+weekday = 6                     
+lows = 7  
+highs = 8                        
+cond_bear_ob = 9              
+cond_bull_ob = 10                 
+ADR = 11                    
+fib_1 = 12                        
+fib_75 = 13                     
+fib_50 = 14                      
+fib_25 = 15                     
+fib_0 = 16                       
+         
+
+
+[model]
+lr_schedule =  [ [0, 0.0003], [50000, 0.0001], [100000, 0.00005] ]
+training_iteration = 100
+
+
