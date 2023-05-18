@@ -20,7 +20,7 @@ mpl.rcParams['savefig.pad_inches'] = 0
 toml = get_toml_data('config.toml')
 image_path = toml['file']['image']
 
-WINDOW = 60
+WINDOW = toml['config_data']['window']
 df = data_main(0)
 print(df.head())
 
