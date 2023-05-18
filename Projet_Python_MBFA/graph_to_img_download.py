@@ -4,8 +4,6 @@ import pandas
 import pandas_ta
 import numpy as np
 import io
-import numba
-import multiprocessing
 
 from matplotlib.lines import Line2D
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -71,26 +69,10 @@ def download_image_as_array(df, i):
 
     return 
   
-  
-#numba_function = numba.jit(download_image_as_array)
 
-if __name__ == '__main__':
-  image_obj, _ = Parallel(n_jobs=3, backend='multiprocessing', max_nbytes=None)(delayed(download_image_as_array)(df, i) for df, i in zip([df*100], range(23000, 23000+100)))
-
-print(image_obj)
-i = 23000
-for image in image_obj:
-    image.savefig(f"/Volumes/NO NAME/graph_image_{i}.png")
-    i+=1
-
-
-
-print('done')
-
-#for i in range(23000, len(df) - WINDOW - 100):
+for i in range(0, 20000):
     
-  #  rolling_df = df.iloc[i:i+WINDOW]
-    
-    #numba_function(rolling_df, i)
-  #  print(i)
+    rolling_df = df.iloc[i:i+WINDOW]   
+    download_image_as_array(rolling_df, i)
+    print(i)
     
