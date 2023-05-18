@@ -23,10 +23,13 @@ WINDOW = 60
 df = data_main(0)
 print(df.head())
 
+start = 0
+loops_per_worker = 10000
+
 def download_image_as_array(df1, i):
   """downloads an annotated graph image mimicking what a trader would look at"""
 
-  for i in range(i, i+1700):
+  for i in range(i, i+loops_per_worker):
       df = df1.copy()
       df = df.iloc[i:i+WINDOW]
 
@@ -81,7 +84,7 @@ def download_image_as_array(df1, i):
 # Using joblib to speed up execution by running multiple instances at once
 
 if __name__ == '__main__':
-    Parallel(n_jobs=3, max_nbytes=None)(delayed(download_image_as_array)(df, i) for df, i in zip([df, df, df], [28300, 32300, 36300]))
+    Parallel(n_jobs=3, max_nbytes=None)(delayed(download_image_as_array)(df, i) for df, i in zip([df, df, df], [start, start+loops_per_worker, start+2*loops_per_worker]))
 
 print('done')
 
