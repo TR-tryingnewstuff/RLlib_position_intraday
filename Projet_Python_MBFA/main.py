@@ -236,7 +236,7 @@ neural_network =  {'conv_filters':
 
 
 
-config = ppo.PPOConfig().environment(Market, render_env=True).rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
+config = ppo.PPOConfig().environment(Market).rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
 config = config.training(lr_schedule=toml['model']['lr_schedule'], clip_param=0.25, gamma=0.95, use_critic=True, use_gae=True, model=neural_network, train_batch_size=200)
 algo = config.build()
 
