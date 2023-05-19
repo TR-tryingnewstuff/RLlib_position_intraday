@@ -18,5 +18,5 @@ The project is composed of multiple files :
 - get_data_stock_trading_mbfa -> file for reading, formatting, calculating features for the dataframe
 - graph_to_img_download -> file for creating annotated financial graphs that will be inputed to the algorithm
 - custom_model -> file containing the class containing the neural network architecture based on tensorflow and keras
-- main -> file containing the Market class environment and allows training and tuning the algorithm
+- main -> file containing the Market class environment and performs training and tuning the algorithm
 - backtest_agent -> given a checkpoint path the file will allow one to backtest a trained agent for backtesting purposes 
