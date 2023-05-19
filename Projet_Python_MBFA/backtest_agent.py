@@ -19,11 +19,13 @@ import PIL
 SEE_PROGRESS = True
 VISUALIZE = True
 
+toml = get_toml_data('config.toml')
+image_path = toml['file']['image']
+
 start = 30000
 TRADING_HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
 def backtest_agent(checkpoint_path):
-  """Restores an agent from the given path and trains it for backtesting purposes"""
     df = data_main(0, 50000)
     
     class Market(gym.Env):
@@ -43,7 +45,7 @@ def backtest_agent(checkpoint_path):
             self.df = df.iloc[self.n_step:self.n_step+WINDOW]
             
             
-            image = PIL.Image.open(f'/Volumes/NO NAME/graph_image_{self.df.index.values[1]}.png')
+            image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
             image = np.asarray(image)
             self.observation = {'image': image, 'position': self.position}
             
@@ -68,7 +70,7 @@ def backtest_agent(checkpoint_path):
             
             self.df = df.iloc[self.n_step:self.n_step+WINDOW]
             
-            image = PIL.Image.open(f'/Volumes/NO NAME/graph_image_{self.df.index.values[1]}.png')
+            image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
             image = np.asarray(image)
             self.observation = {'image': image, 'position': self.position}
             
@@ -115,7 +117,7 @@ def backtest_agent(checkpoint_path):
                 self.done = True
                 print(self.list_capital)
                 
-            image = PIL.Image.open(f'/Volumes/NO NAME/graph_image_{self.df.index.values[1]}.png')
+            image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
             image = np.asarray(image)
             self.observation = {'image': image, 'position': self.position}
                 
@@ -186,7 +188,7 @@ def backtest_agent(checkpoint_path):
             enter = action['enter']
             size = action['size']
 
-            image = PIL.Image.open(f'/Volumes/NO NAME/graph_image_{self.df.index.values[1]}.png')
+            image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
             
             plt.title(f' capital : {round(float(self.capital))}  position : {round(float(self.position), 2)}  action : {enter} size : {round(float(size), 2)} ')
             plt.imshow(image)
