@@ -8,35 +8,34 @@ import gymnasium as gym
 from gymnasium.spaces import Discrete, Box, Dict
 
 from ray.rllib.algorithms import ppo
-from ray.rllib.algorithms.algorithm import Algorithm
 from ray import tune
 from ray import air
 import PIL
 
+
 import matplotlib.pyplot as plt
 
 VISUALIZE = False
-SEE_PROGRESS = True
+SEE_PROGRESS = False
 
 TRADING_HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-DF_SPLIT = 10000
 
 toml = get_toml_data('config.toml')
 
-DF_SIZE = toml['config_data']['size'] 
+stop = toml['config_data']['stop'] 
 WINDOW = toml['config_data']['window']
 
 image_path = toml['file']['image']
 
 # --------------------------------------------
 
-df_base = data_main(DF_SIZE)
-df = df_base.iloc[0:-DF_SPLIT]
+df = data_main(0, stop)
+
     
 print(df.columns, '\n'*2, df.info(), '\n'*3, df.head(), df.tail())
 
 class Market(gym.Env):
-    """A class to represent financial Markets"""
+    """A class to represent a trading environment"""
     def __init__(self, env_config):
         
         # Initializing the attributes
@@ -125,11 +124,13 @@ class Market(gym.Env):
               
         return self.observation, float(reward), self.done, info
        
+    
     def get_reward(self, action):
         """Compute reward from the chosen action, it returns the price change multiplied by the size of the position"""
         reward = 0
         
-        action = self.rule_of_thumbs_check(action)
+        # you can disable the following line if you want 
+        #action = self.rule_of_thumbs_check(action)
         
         if action['enter'] == 2:
             self.position =  min(action['size'] + self.position, 1)
@@ -141,7 +142,7 @@ class Market(gym.Env):
         num_of_contracts = abs(self.position * (self.capital / self.df['close'].values[-1]))
         
         reward -= self.commission * num_of_contracts
-        reward += (self.df['close'].values[-1] - self.df['close'].values[-2]) * self.position
+        reward += (self.df['close'].values[-1] - self.df['close'].values[-2]) * num_of_contracts
             
         return reward
     
@@ -188,40 +189,14 @@ class Market(gym.Env):
         enter = action['enter']
         size = action['size']
 
-        i = self.n_step
-        color_index = np.where(df.open[i:i+WINDOW] < df.close[i:i+WINDOW], 'gray', 'black')
-        date_index = np.array(df[i:i+WINDOW].index)
-        
-        bars = np.array(df.close[i:i+WINDOW])-np.array(df.open[i:i+WINDOW])
-        wicks = np.array(df.high[i:i+WINDOW])-np.array(df.low[i:i+WINDOW])
-        plt.bar(date_index, bars, width=0.7, bottom=df.open[i:i+WINDOW], color=color_index)
-        plt.bar(date_index, wicks, width=0.1, bottom=df.low[i:i+WINDOW], color=color_index)
+        image = PIL.Image.open(f'/Volumes/NO NAME/graph_image_{self.df.index.values[1]}.png')
         
         plt.title(f' capital : {round(float(self.capital))}  position : {round(float(self.position), 2)}  action : {enter} size : {round(float(size), 2)} ')
-            
+        plt.imshow(image)
+        plt.axis('off')
         plt.pause(0.1)
         plt.clf()
 
-
-
-neural_network =  {
-                  'conv_filters': tune.grid_search([  
-                                                      [ [8, [2, 2], 3], 
-                                                        [8, [2, 2], 3], 
-                                                        [8, [2, 2], 3],
-                                                        [8, [2, 2], 2]], 
-                                                                                                                                                                                                      
-                                                      [ [10, [2, 2], 5], 
-                                                        [10, [2, 2], 4], 
-                                                        [10, [2, 2], 3] ], 
-                                                    
-                                                      [ [16, [2, 2], 8], 
-                                                        [10, [2, 2], 8] ] ]),
-                  'conv_activation': 'tanh',
-                  'post_fcnet_hiddens': [5],
-                  'post_fcnet_activation': 'tanh',
-                  'use_lstm': True,
-                  'lstm_cell_size': 84}
 
 neural_network =  {'conv_filters': 
                                                       [ [4, [3, 3], 5],  
@@ -236,40 +211,35 @@ neural_network =  {'conv_filters':
 
 
 
-config = ppo.PPOConfig().environment(Market).rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
-config = config.training(lr_schedule=toml['model']['lr_schedule'], clip_param=0.25, gamma=0.95, use_critic=True, use_gae=True, model=neural_network, train_batch_size=200)
+config = ppo.PPOConfig().environment(Market)
+config = config.rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
+config = config.training(lr_schedule=toml['model']['lr_schedule'], clip_param=0.25, gamma=0.95, use_critic=True, use_gae=True, model=neural_network, train_batch_size=128)
 algo = config.build()
 
 print(algo.get_policy().model.base_model.summary())
+
 tuner = tune.Tuner(  
         "PPO",
         param_space=config.to_dict(),
         run_config=air.RunConfig(
                     stop={"training_iteration": toml['model']['training_iteration']},
-                    checkpoint_config=air.CheckpointConfig(checkpoint_at_end=True, checkpoint_frequency=100)
+                    checkpoint_config=air.CheckpointConfig(num_to_keep= 3,checkpoint_at_end=True, checkpoint_frequency=50)
 
         )
 )
 
 results = tuner.fit()
 
-# ---------------------- backtesting best parameters on unseen data ---------------------------
+# ---------------------- GET BEST ALGO FILE ---------------------------
 
 best_result = results.get_best_result(metric="episode_reward_max", mode="max")
-# Get the best checkpoint corresponding to the best result.
+
 checkpoint_path = best_result.checkpoint
 print('\n'*5, checkpoint_path, '\n'*5)
 
-algo = Algorithm.from_checkpoint(checkpoint_path)
 
-df = df_base.iloc[-DF_SPLIT:]
 
-episodes_len = []
-for i in range(20):
-    train_res = algo.train()
-    print(train_res['episode_len_mean'])
 
-    episodes_len.append(train_res['episode_len_mean'])
 
-print(train_res, '\n'*3,episodes_len)
+
 
