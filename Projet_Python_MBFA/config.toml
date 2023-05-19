@@ -1,5 +1,5 @@
 [config_data] 
-size = 0
+stop = 35000
 window = 60
 
 [file]
@@ -24,11 +24,11 @@ fib_75 = 13
 fib_50 = 14                      
 fib_25 = 15                     
 fib_0 = 16                       
-         
-
+        
 
 [model]
 lr_schedule =  [ [0, 0.0003], [50000, 0.0001], [100000, 0.00005] ]
-training_iteration = 100
+training_iteration = 350
+
 
 
