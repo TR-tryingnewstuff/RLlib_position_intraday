@@ -159,8 +159,7 @@ def data_main(start, stop=-1):
     df_daily = get_daily_data(start, stop).dropna()  
 
     df = pd.merge(df, df_daily, 'left', left_on='date', right_on='date', suffixes=('', '_d')).ffill().dropna().reset_index(drop=True)
-    df = df.drop(['index', 'date', 'open_d', 'high_d', 'low_d', 'close_d', 'highs_p', 'lows_p',  'daily_move', 'daily_move_d', 'int_highs', 'int_lows'], axis=1) 
-    #df = df.drop(['relative_range_position_20', 'relative_range_position_40', 'relative_range_position_60', 'bearish_market_structure', 'bullish_market_structure', 'ADR', 'bull_low_liquidity', 'bear_high_liquidity'], axis=1)      
+    df = df.drop(['index', 'date', 'open_d', 'high_d', 'low_d', 'close_d', 'highs_p', 'lows_p',  'daily_move', 'daily_move_d', 'int_highs', 'int_lows'], axis=1)      
 
     df = df*1 # converts bool to int
     
