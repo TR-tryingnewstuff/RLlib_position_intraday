@@ -211,9 +211,7 @@ ModelCatalog.register_custom_model("keras_model", KerasModel)
 config = ppo.PPOConfig().environment(Market)
 config = config.rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
 config = config.training(lr_schedule=toml['model']['lr_schedule'], clip_param=0.25, gamma=0.95, use_critic=True, use_gae=True, model={'custom_model': 'keras_model'}, train_batch_size=128)
-#algo = config.build()
 
-#print(algo.get_policy().model.base_model.summary())
 
 tuner = tune.Tuner(  
         "PPO",
