@@ -24,8 +24,8 @@ WINDOW = toml['config_data']['window']
 df = data_main(0)
 print(df.head())
 
-start = 38000
-loops_per_worker = 4000
+start = 0
+loops_per_worker = 10000
 
 def download_image_as_array(df1, i):
   """downloads an annotated graph image mimicking what a trader would look at"""
