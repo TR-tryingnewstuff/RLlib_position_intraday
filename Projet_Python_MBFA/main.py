@@ -11,7 +11,8 @@ from ray.rllib.algorithms import ppo
 from ray import tune
 from ray import air
 import PIL
-
+from custom_model import KerasModel
+from ray.rllib.models.catalog import ModelCatalog
 
 import matplotlib.pyplot as plt
 
@@ -40,7 +41,7 @@ class Market(gym.Env):
         
         # Initializing the attributes
         self.list_capital = []
-        self.position = 0
+        self.position = np.array([0.0])
         self.commission = 0.75 # per contract 
         self.capital = 1000
        
@@ -53,9 +54,14 @@ class Market(gym.Env):
         
         image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
         image = np.asarray(image)
-        self.observation = image
+        self.observation = {'image': image, 'position': self.position}
+        
+        print(self.position, self.position.shape, self.position.dtype)
        
-        self.observation_space = Box(-np.inf, np.inf, shape=self.observation.shape)
+        self.observation_space = Dict({
+            'image': Box(-np.inf, np.inf, shape=image.shape), 
+            'position': Box(-1, 1)     })
+        
         self.action_space = Dict({'enter': Discrete(3), 'size': Box(low=0, high=1)})
         
     
@@ -63,7 +69,7 @@ class Market(gym.Env):
         """Resets the environment"""
         
         self.list_capital = []
-        self.position = 0
+        self.position = np.array([0.0])
         self.capital = 1000
         self.done = False
         self.n_step = 0
@@ -73,7 +79,7 @@ class Market(gym.Env):
         
         image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
         image = np.asarray(image)
-        self.observation = image
+        self.observation = {'image': image, 'position': self.position}
         
         return self.observation
          
@@ -98,7 +104,7 @@ class Market(gym.Env):
 
         if self.df['hour'].values[-1] not in TRADING_HOURS:        # Filter for taking trades only during certain hours
             reward -= self.commission * action['size']                   # close position at the end of the day
-            self.position = 0
+            self.position = np.array([0.0])
             
             while not self.df['hour'].values[-1] in TRADING_HOURS:
                 self.n_step += 1
@@ -120,7 +126,7 @@ class Market(gym.Env):
             
         image = PIL.Image.open(f'{image_path}graph_image_{self.df.index.values[1]}.png')
         image = np.asarray(image)
-        self.observation = image
+        self.observation = {'image': image, 'position': self.position}
               
         return self.observation, float(reward), self.done, info
        
@@ -133,11 +139,11 @@ class Market(gym.Env):
         #action = self.rule_of_thumbs_check(action)
         
         if action['enter'] == 2:
-            self.position =  min(action['size'] + self.position, 1)
+            self.position =  min(action['size'] + self.position, np.asarray([1.0]))
 
             
         elif action['enter'] == 0:
-            self.position =  max([-action['size'] + self.position, -1])             
+            self.position =  max([-action['size'] + self.position, np.asarray([-1.0])])             
                 
         num_of_contracts = abs(self.position * (self.capital / self.df['close'].values[-1]))
         
@@ -198,25 +204,16 @@ class Market(gym.Env):
         plt.clf()
 
 
-neural_network =  {'conv_filters': 
-                                                      [ [4, [3, 3], 5],  
-                                                        [8, [2, 2], 4], 
-                                                        [16, [2, 2], 3],
-                                                        [16, [2, 2], 2],
-                                                        [32, [2, 2], 2],                                                       
-                                                        [64, [2, 2], 2]], 
-                                                                                                                                                                                                      
-                  'conv_activation': 'tanh',
-                  }
 
 
+ModelCatalog.register_custom_model("keras_model", KerasModel)
 
 config = ppo.PPOConfig().environment(Market)
 config = config.rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
-config = config.training(lr_schedule=toml['model']['lr_schedule'], clip_param=0.25, gamma=0.95, use_critic=True, use_gae=True, model=neural_network, train_batch_size=128)
-algo = config.build()
+config = config.training(lr_schedule=toml['model']['lr_schedule'], clip_param=0.25, gamma=0.95, use_critic=True, use_gae=True, model={'custom_model': 'keras_model'}, train_batch_size=128)
+#algo = config.build()
 
-print(algo.get_policy().model.base_model.summary())
+#print(algo.get_policy().model.base_model.summary())
 
 tuner = tune.Tuner(  
         "PPO",
@@ -236,10 +233,3 @@ best_result = results.get_best_result(metric="episode_reward_max", mode="max")
 
 checkpoint_path = best_result.checkpoint
 print('\n'*5, checkpoint_path, '\n'*5)
-
-
-
-
-
-
-
