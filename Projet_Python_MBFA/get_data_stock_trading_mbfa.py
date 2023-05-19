@@ -6,12 +6,14 @@ WINDOW = 60
 SEASONALS = [-1, 0, 1, 1, 0, -1, 1, 0, 0, 1, 1, 1]
 DAILY_INDICATORS = ['bull_ob', 'bear_ob', 'bull_bb', 'bear_bb', 'bull_low_liquidity', 'bear_high_liquidity']
 
+data = '/Users/thomasrigou/Downloads/es-15m.csv'
 
-def get_15min_data(start, indicator=True, economic_calendar = True):
+
+def get_15min_data(start, stop=-1, indicator=True, economic_calendar = True):
     """Returns the S&P 500 historical 15min data + some custom indicators if indicators = True"""
     
-    df = pd.read_csv("/Users/thomasrigou/Downloads/es-15m.csv", delimiter=';', names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
-    df = df.iloc[start:].reset_index()
+    df = pd.read_csv(data, delimiter=';', names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
+    df = df.iloc[start:stop].reset_index()
 
     df['index'] = pd.to_datetime(df['date'] + ' ' + df['time'], format='%d/%m/%Y %H:%M:%S', exact=True, infer_datetime_format=True)
     df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y', exact=True, infer_datetime_format=True)
@@ -39,11 +41,11 @@ def get_15min_data(start, indicator=True, economic_calendar = True):
 
     return df
 
-def get_daily_data(start, indicator=True):
+def get_daily_data(start, stop=-1, indicator=True):
     """Returns the S&P 500 historical daily data + some custom indicators if indicators = True"""
     
-    df = pd.read_csv("/Users/thomasrigou/Downloads/es-15m.csv", delimiter=';', names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
-    df = df.iloc[start:].reset_index()
+    df = pd.read_csv(data, delimiter=';', names=['date', 'time', 'open', 'high', 'low', 'close', 'volume'])
+    df = df.iloc[start:stop].reset_index()
 
     df['index'] = pd.to_datetime(df['date'] + ' ' + df['time'], format='%d/%m/%Y %H:%M:%S', exact=True, infer_datetime_format=True)
     df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y', exact=True, infer_datetime_format=True)
@@ -152,10 +154,10 @@ def fib(df):
     
     return df
 
-def data_main(size):
-    df = get_15min_data(size, economic_calendar=False)
+def data_main(start, stop=-1):
+    df = get_15min_data(start, stop, economic_calendar=False)
 
-    df_daily = get_daily_data(size).dropna()  
+    df_daily = get_daily_data(start, stop).dropna()  
 
     df = pd.merge(df, df_daily, 'left', left_on='date', right_on='date', suffixes=('', '_d')).ffill().dropna().reset_index(drop=True)
     df = df.drop(['index', 'date', 'open_d', 'high_d', 'low_d', 'close_d', 'highs_p', 'lows_p',  'daily_move', 'daily_move_d', 'int_highs', 'int_lows'], axis=1) 
@@ -164,3 +166,4 @@ def data_main(size):
     df = df*1 # converts bool to int
     
     return df
+
