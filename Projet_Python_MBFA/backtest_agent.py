@@ -88,6 +88,7 @@ def backtest_agent(checkpoint_path):
                 reward = self.get_reward(action)
                 
             else:
+                num_of_contracts = abs(self.position * (self.capital / self.df['close'].values[-1]))
                 reward = (self.df['close'].values[-1] - self.df['close'].values[-2]) * self.position
             
             self.capital = self.capital + reward
