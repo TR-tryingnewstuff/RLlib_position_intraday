@@ -4,7 +4,6 @@ import numpy as np
 WINDOW = 60
 
 SEASONALS = [-1, 0, 1, 1, 0, -1, 1, 0, 0, 1, 1, 1]
-DAILY_INDICATORS = ['bull_ob', 'bear_ob', 'bull_bb', 'bear_bb', 'bull_low_liquidity', 'bear_high_liquidity']
 
 data = '/Users/thomasrigou/Downloads/es-15m.csv'
 
