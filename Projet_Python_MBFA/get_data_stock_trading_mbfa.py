@@ -59,7 +59,7 @@ def get_daily_data(start, stop=-1, indicator=True):
     return df
 
 def lows_highs(df):
-    """Returns the dataframe with lows and highs indicated"""
+    """Returns the dataframe with lows and highs indicated as dummies and as latest turning point price"""
     
     df['lows'] = ((df['low'] < df['low'].shift(1)) & (df['low'] < df['low'].shift(-1)))
     df['highs'] = ((df['high'] > df['high'].shift(1)) & (df['high'] > df['high'].shift(-1)))
@@ -75,7 +75,6 @@ def lows_highs(df):
 
 def order_block(df):
     """Returns the dataframe with orderblocks indicated"""
-
     
     df['cond_bull_ob'] = (df['close'] < df['open']) & (df['close'].shift(-1) > df['open'].shift(-1))
     df['cond_bull_ob'] = df['cond_bull_ob'] & ((df['close'].shift(-2) > df['open'].shift(-2)) | (df['close'].shift(-3) > df['open'].shift(-3)) | (df['close'].shift(-1) > df['open'].shift(-1) * 1.001))
@@ -130,7 +129,6 @@ def add_economic_calendar(df):
     news_h_eur = news.loc[(news.Currency == 'EUR') & (news.Impact == 'HIGH')].Name
 
 
-
     news = pd.concat([news_h_eur, news_h_gbp, news_h_jpy, news_h_usd, news_m_eur, news_m_gbp, news_m_jpy, news_m_usd], axis=1, keys=['h_eur','h_gbp', 'h_jpy', 'h_usd', 'm_eur', 'm_gbp', 'm_jpy', 'm_usd'])
     news = news.fillna(0)
    
@@ -154,6 +152,7 @@ def fib(df):
     return df
 
 def data_main(start, stop=-1):
+    """Returns a 15min dataframe merged with a daily dataframe for creating daily indicators"""
     df = get_15min_data(start, stop, economic_calendar=False)
 
     df_daily = get_daily_data(start, stop).dropna()  
