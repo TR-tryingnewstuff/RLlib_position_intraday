@@ -8,7 +8,6 @@ from gymnasium.spaces import Discrete, Box, Dict
 
 from ray.rllib.algorithms import ppo
 
-
 from custom_model import KerasModel
 from ray.rllib.models.catalog import ModelCatalog
 
@@ -26,6 +25,7 @@ start = 30000
 TRADING_HOURS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 
 def backtest_agent(checkpoint_path):
+    """Given an agent checkpoint path, runs a few training iteration for backtesting purposes"""
     df = data_main(0, 50000)
     
     class Market(gym.Env):
@@ -216,6 +216,6 @@ def backtest_agent(checkpoint_path):
 
         episodes_len.append(train_res['episode_len_mean'])
 
-    print(train_res, '\n'*3,episodes_len)
+    print(train_res)
     
 backtest_agent("/Users/thomasrigou/ray_results/PPO/PPO_Market_34dbc_00000_0_2023-05-19_15-58-18/checkpoint_000150")
