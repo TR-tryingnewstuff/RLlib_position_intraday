@@ -205,9 +205,9 @@ class Market(gym.Env):
         plt.clf()
 
 
+# ----------------- ALGORITHM CONFIGURATION -------------------------
 
-
-ModelCatalog.register_custom_model("keras_model", KerasModel)
+ModelCatalog.register_custom_model("keras_model", KerasModel) 
 
 config = ppo.PPOConfig().environment(Market)
 config = config.rollouts(num_rollout_workers=1).resources(num_cpus_for_local_worker=2)
