@@ -10,12 +10,13 @@ class KerasModel(TFModelV2):
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
         super(KerasModel, self).__init__(obs_space, action_space, num_outputs, model_config, name)
         original_space = obs_space.original_space if hasattr(obs_space, "original_space") else obs_space
+        
+        # Input layers
         self.image = tf.keras.layers.Input(shape=original_space['image'].shape, name="image")
         self.position = tf.keras.layers.Input(shape=original_space['position'].shape, name="position")
 
-        # Concatenating the inputs;
-        # One can pass different parts of the state to different networks before concatenation.
-        
+
+        # Convolution layers
         conv1 = tf.keras.layers.Conv2D(4, (3, 3), (5, 5))(self.image)
         conv2 = tf.keras.layers.Conv2D(8, (2, 2), (4, 4))(conv1)
         conv3 = tf.keras.layers.Conv2D(16, (2, 2), (3, 3))(conv2)
@@ -25,20 +26,22 @@ class KerasModel(TFModelV2):
         conv_flat = tf.keras.layers.Flatten()(conv6)
         conv_out = tf.keras.layers.Dense(1, activation='tanh')(conv_flat)
         
-        
+        # Concatenate
         concatenated = tf.keras.layers.Concatenate()([conv_out, self.position])
 
-        # Building the dense layers
+        # Building the two outputs to update both the actor and the critic
         layer_out = tf.keras.layers.Dense(num_outputs, activation='tanh')(concatenated)
         
         self.value_out = tf.keras.layers.Dense(1, name='value_out')(concatenated)
         
+        # Linking everything together
         self.base_model = tf.keras.Model([self.image, self.position], [layer_out, self.value_out])
         self.base_model.summary()
         self._value_out = None
 
     def forward(self, input_dict, state, seq_lens):
-        """Custom core forward method."""
+        """Takes the observation as input, processes it through 
+            the neural network and outputs the action"""
         if SampleBatch.OBS in input_dict and "obs_flat" in input_dict:
             orig_obs = input_dict[SampleBatch.OBS]
         else:
